@@ -11,20 +11,25 @@ Khách hàng **không có số liệu** ("Ối anh có đếm đâu em"). Dùng 
 
 ```
 Đầu vào đã biết:
-  15 sân (cụm A: 6, cụm B: 5, cụm C: 4)
-  Giờ mở cửa 05:00–23:00  →  18 slot/ngày/sân
+  15 sân (Cụm 1: 6 · Cụm 2: 5 · Cụm 3: 4)
+  Giờ mở cửa 05:00–23:00 = 18 giờ
+  Slot = 30 phút (BR-01)  →  36 slot/ngày/sân
 
 Sức chứa lý thuyết:
-  15 sân × 18 slot            =  270 slot-giờ/ngày
-                              ≈ 8.100 slot-giờ/tháng
+  15 sân × 18 giờ             =  270 giờ-sân/ngày
+  15 sân × 36 slot            =  540 slot/ngày
 
-Tỉ lệ lấp đầy ước tính ~40%   ≈  108 lượt đặt/ngày
+Tỉ lệ lấp đầy ước tính ~40%   ≈  108 giờ-sân bán ra/ngày
+Thời lượng trung bình ~1 giờ  ≈  108 lượt ĐẶT/ngày
                               ≈ 3.240 lượt đặt/tháng
                               ≈ 40.000 đơn/năm
+                              ≈ 80.000 dòng booking_slot/năm
 
 Cao điểm 17:00–23:00:
-  6 slot × 15 sân = 90 slot, gần như kín
+  12 slot × 15 sân = 180 slot (= 90 giờ-sân), gần như kín
 ```
+
+> ⚠️ **Đọc kỹ chỗ này:** đổi grain từ 60′ xuống 30′ *(CR-07)* làm **số dòng `booking_slot` tăng gấp đôi**, nhưng **số lượt đặt không đổi** — khách vẫn chơi từng ấy giờ, chỉ là chia nhỏ hơn. Tải ghi thực tế vì vậy **không thay đổi**. Phân biệt được hai con số này là điều kiện để ước lượng tải đúng.
 
 > **Kết luận kiến trúc quan trọng nhất rút ra từ đây:** tải **rất nhỏ**. Một instance PostgreSQL là quá đủ. **Không** sharding, **không** read replica, **không** Kafka, **không** microservices. Mọi đề xuất "cho hoành tráng" đều là over-engineering và sẽ bị từ chối.
 

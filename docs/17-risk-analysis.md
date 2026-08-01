@@ -27,6 +27,9 @@
 | **R-12** | **N+1 query** trên API xem lịch trống → vi phạm NFR-02 | 2 | 2 | 4 🟡 | Projection thay vì `Include`; log đếm số câu SQL mỗi request | `EXPLAIN ANALYZE` trước khi merge |
 | **R-13** | Redis chết kéo sập luồng đặt sân | 1 | 3 | 3 🟢 | Redis **chỉ** là cache; cache miss → đọc thẳng CSDL. Không dùng Redis để giữ chỗ | Health check phân biệt liveness/readiness |
 | **R-14** | **Log lộ dữ liệu cá nhân** (SĐT, token) | 2 | 2 | 4 🟡 | Serilog destructuring policy mask SĐT; cấm log object request thô | Rà log định kỳ |
+| **R-25** | **Phân mảnh lịch** — nhiều khoảng 30 phút rời rạc, không ai đặt được khối liên tục *(hệ quả của CR-07)* | 2 | 2 | 4 🟡 | **BR-33** — tối thiểu 60 phút ở khung cao điểm, chỉ cho 30 phút ở khung thấp điểm | Báo cáo tỉ lệ lấp đầy theo khung giờ; nếu phân mảnh vẫn cao thì nâng ngưỡng tối thiểu |
+| **R-26** | **Lạm dụng dời lịch** — khách dời liên tục để giữ chỗ miễn phí | 2 | 2 | 4 🟡 | **BR-38** — giới hạn 2 lần/đơn, cấu hình theo tenant; phải bù tiền khi slot mới đắt hơn | Theo dõi `reschedule_count` trung bình; thu hồi `CanCancelLate` nếu lạm dụng |
+| **R-27** | **Ghi đè hoàn tiền bị lạm dụng** — quản lý tự ý hoàn 100% cho người quen | 2 | 2 | 4 🟡 | **BR-40** bắt buộc nhập lý do + audit log (BR-32); phạm vi giới hạn theo chi nhánh (BR-29) | Báo cáo định kỳ số lần ghi đè theo từng quản lý |
 
 ## 2. Rủi ro nghiệp vụ
 
@@ -35,7 +38,7 @@
 | **R-15** | **Khách quen không dùng web**, vẫn nhắn Zalo → mục tiêu G3 không đạt | 3 | 2 | **6** 🔴 | Nhân viên nhập hộ vào hệ thống (UC-08) — hệ thống vẫn là nguồn sự thật duy nhất |
 | **R-16** | **Nhân viên vẫn ghi sổ song song** → quay lại hai nguồn sự thật, trùng lịch tái diễn | 2 | 3 | **6** 🔴 | Đào tạo + bỏ hẳn sổ giấy khi go-live; báo cáo chỉ lấy từ hệ thống |
 | **R-17** | Chính sách hoàn tiền gây tranh cãi với khách | 2 | 2 | 4 🟡 | Hiển thị rõ số tiền hoàn **trước khi** khách xác nhận (FR-32); ghi audit log |
-| **R-18** | Khách ruột lạm dụng `PayAtCounter` rồi no-show | 2 | 2 | 4 🟡 | Tự động thu hồi `IsTrusted` sau 2 lần no-show trong 90 ngày (BR-22) |
+| **R-18** | Khách ruột lạm dụng `PayAtCounter` rồi no-show | 2 | 2 | 4 🟡 | Tự động thu hồi cờ `CanPayAtCounter` sau 2 lần no-show trong 90 ngày (BR-22) |
 | **R-19** | Chủ sân đổi yêu cầu giữa chừng (thêm bán nước, gọi món…) | 3 | 2 | **6** 🔴 | Danh sách **Won't have** đã chốt ở [18-roadmap.md](18-roadmap.md); thay đổi phải vào backlog sprint sau |
 
 ## 3. Rủi ro dự án
@@ -69,7 +72,7 @@
 | **A1** | Mọi chi nhánh cùng múi giờ Việt Nam | Thấp — schema đã lưu `time_zone` mỗi branch để phòng | Ngay | 🟡 Mở |
 | **A2** | Chính sách hoàn 24h/4h là chấp nhận được | Trung bình — chỉ là tham số cấu hình, đổi dễ | Sprint 3 | 🟡 Mở |
 | **A3** | VNPay sandbox đủ để demo, không cần merchant thật | Thấp | Sprint 4 | 🟡 Mở |
-| **A4** | `IsTrusted` do Staff/Owner đánh dấu thủ công | Thấp — có thể tự động hoá sau | Sprint 2 | 🟡 Mở |
+| **A4** | Hai cờ `CanPayAtCounter` / `CanCancelLate` do Staff/Manager đánh dấu thủ công | Thấp — có thể tự động hoá sau | Sprint 2 | 🟡 Mở |
 | **A5** | Một số điện thoại = một tài khoản, không chia sẻ | **Trung bình — nhóm chơi chung hay dùng một số** | Sprint 1 | 🟡 Mở |
 | **A6** | Cửa sổ sinh buổi định kỳ 8 tuần là đủ | Thấp — tham số cấu hình | Sprint 5 | 🟡 Mở |
 | **A7** | Tỉ lệ lấp đầy ~40% dùng để ước lượng tải | Thấp — nếu sai gấp 3 lần thì tải vẫn nhỏ | Sau go-live | 🟡 Mở |

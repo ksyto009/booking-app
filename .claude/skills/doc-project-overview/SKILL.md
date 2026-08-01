@@ -24,7 +24,7 @@ Trả lời trong **một trang** cho người mới hoàn toàn: hệ thống n
 
 1. **Vấn đề trước, giải pháp sau.** Nếu §1 mô tả tính năng thay vì nỗi đau → viết lại.
 2. **Mỗi mục tiêu phải đo được**, có giá trị hiện tại và giá trị mục tiêu.
-3. **Stakeholder phải có người bị ảnh hưởng gián tiếp** — họ hay bị quên và hay tạo ràng buộc bất ngờ (ví dụ: người góp vốn cụm C).
+3. **Stakeholder phải có người bị ảnh hưởng gián tiếp** — họ hay bị quên và hay tạo ràng buộc bất ngờ (ví dụ: Đối tác góp vốn chỉ được xem một chi nhánh).
 4. Ràng buộc là **sự thật**, không phải mong muốn.
 5. Không đưa chi tiết kỹ thuật vào đây — chỉ link.
 

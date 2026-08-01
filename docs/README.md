@@ -24,11 +24,12 @@ Hệ thống đặt sân thể thao theo khung giờ (cầu lông / pickleball),
 | 13 | [Deployment](13-deployment.md) | Docker, CI/CD, migration, backup | 🚧 |
 | 14 | [Security](14-security.md) | STRIDE, auth, cách ly tenant | 🚧 |
 | 15 | [Testing Strategy](15-testing-strategy.md) | Kim tự tháp test, Testcontainers | 🚧 |
-| 16 | [Decision Records](16-decision-records/) | ADR — **lý do** của mọi quyết định lớn | ✅ 1/7 |
+| 16 | [Decision Records](16-decision-records/) | ADR — **lý do** của mọi quyết định lớn | ✅ 3/9 |
 | 17 | [Risk Analysis](17-risk-analysis.md) | `R-01…24` + assumptions | ✅ |
 | 18 | [Roadmap](18-roadmap.md) | MoSCoW + lộ trình Sprint 0–7 | ✅ |
 | 19 | [Runbook](19-runbook.md) | Xử lý sự cố | 🚧 |
 | 20 | [Tech Debt](20-tech-debt.md) | Sổ nợ kỹ thuật | ✅ |
+| 21 | [Change Requests](21-change-requests.md) | Sổ đề nghị thay đổi yêu cầu — `CR-01…08` | ✅ |
 | ⭐ | [Design Decisions](design-decisions.md) | **13 quyết định kỹ thuật + ~45 câu hỏi phỏng vấn** | ✅ |
 | 📖 | [SDLC Playbook](sdlc-playbook.md) | Quy trình 7 giai đoạn từ yêu cầu tới vận hành | ✅ |
 
@@ -57,6 +58,7 @@ Hệ thống đặt sân thể thao theo khung giờ (cầu lông / pickleball),
 | `BR-xx` | Quy tắc nghiệp vụ | 06 |
 | `R-xx` / `A-x` | Rủi ro / Giả định | 17 |
 | `TD-xx` | Nợ kỹ thuật | 20 |
+| `CR-xx` | Đề nghị thay đổi yêu cầu | 21 |
 | `ADR-xxxx` | Quyết định kiến trúc | 16 |
 
 **Chuỗi truy vết:** `BRQ → FR → UC → BR → Test`

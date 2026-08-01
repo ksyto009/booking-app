@@ -45,11 +45,13 @@
 | **FR-17** | Hệ thống **từ chối** đơn nếu bất kỳ slot nào đã bị chiếm, trả lỗi rõ ràng chỉ đúng slot xung đột | 🔴 | **BR-06** | UC-06 |
 | **FR-18** | Đơn tạo online chuyển sang trạng thái **chờ thanh toán**, giữ slot trong **10 phút** | 🔴 | BR-07, BR-11 | UC-06 |
 | **FR-19** | Hết 10 phút chưa thanh toán → hệ thống **tự động** hủy đơn và giải phóng slot | 🔴 | BR-11 | UC-07 |
-| **FR-20** | Khách `IsTrusted` đặt online được xác nhận ngay, chọn trả tiền tại quầy | 🔴 | BR-12 | UC-06 |
+| **FR-20** | Khách có cờ `CanPayAtCounter` đặt online được xác nhận ngay, chọn trả tiền tại quầy | 🔴 | BR-12 | UC-06 |
 | **FR-21** | Staff tạo đơn **hộ khách** (nhập SĐT khách), đơn được xác nhận ngay | 🔴 | BR-13 | UC-08 |
 | **FR-22** | Khách xem danh sách đơn của mình (sắp tới / lịch sử) và chi tiết một đơn | 🔴 | — | UC-09 |
 | **FR-23** | Mỗi đơn có **mã đơn dễ đọc** để khách đọc qua điện thoại | 🔴 | — | UC-09 |
 | **FR-24** | Hệ thống cho khách chọn "sân nào cũng được", tự gán sân trống | 🔵 | BR-09 | — |
+| **FR-62** | Khách chọn thời lượng là **bội số của 30 phút** (30′, 60′, 90′, 120′…), bắt đầu tại mốc `:00` hoặc `:30` | 🔴 | BR-01 | UC-06 |
+| **FR-63** | Hệ thống **từ chối** lượt đặt ngắn hơn thời lượng tối thiểu của khung giờ đó, và dài hơn tối đa | 🔴 | BR-33 | UC-06 |
 
 ## FR-E — Thanh toán
 
@@ -72,6 +74,10 @@
 | **FR-34** | Staff/Manager hủy đơn thay khách, bắt buộc nhập lý do | 🔴 | BR-18, BR-32 | UC-13 |
 | **FR-35** | Hủy do phía sân (sự cố, mưa) → hoàn **100%** bất kể thời điểm | 🟡 | BR-18 | UC-23 |
 | **FR-36** | Yêu cầu hoàn tiền được xử lý **bất đồng bộ**, có trạng thái theo dõi được | 🔴 | BR-19 | UC-12 |
+| **FR-64** | Khi hủy, khách **tự chọn** giữa **hoàn tiền** và **dời lịch**; hệ thống xử lý tự động, không cần ai duyệt | 🔴 | BR-34 | UC-12 |
+| **FR-65** | Khách **dời lịch** sang khung giờ / ngày / sân khác. Thao tác **nguyên tử** — slot mới bị chiếm thì đơn cũ **không đổi** | 🔴 | BR-37 | UC-26 |
+| **FR-66** | Hệ thống giới hạn **số lần dời**/đơn, bắt **bù tiền** khi slot mới đắt hơn, và **không hoàn chênh lệch** khi rẻ hơn | 🔴 | BR-38 | UC-26 |
+| **FR-67** | `BranchManager` **ghi đè** mức hoàn tiền trong phạm vi chi nhánh mình, bắt buộc nhập lý do và ghi audit log | 🔴 | BR-40, BR-41 | UC-27 |
 
 ## FR-G — Check-in & No-show
 
@@ -80,7 +86,7 @@
 | **FR-37** | Staff tra cứu đơn theo **mã đơn** hoặc **SĐT** để check-in | 🔴 | — | UC-14 |
 | **FR-38** | Staff check-in đơn → trạng thái `CheckedIn` | 🔴 | — | UC-14 |
 | **FR-39** | Staff đánh dấu `NoShow` khi quá giờ bắt đầu 15 phút | 🔴 | BR-20, BR-21 | UC-15 |
-| **FR-40** | `NoShow` làm tăng bộ đếm của khách; đủ 2 lần trong 90 ngày → **tự động** thu hồi `IsTrusted` | 🔴 | BR-22 | UC-15 |
+| **FR-40** | `NoShow` làm tăng bộ đếm của khách; đủ 2 lần trong 90 ngày → **tự động** thu hồi `CanPayAtCounter` *(không đụng `CanCancelLate`)* | 🔴 | BR-22 | UC-15 |
 
 ## FR-H — Đặt định kỳ
 
@@ -100,7 +106,7 @@
 | **FR-47** | Owner giới hạn **phạm vi chi nhánh** cho từng người | 🔴 | BR-29 | UC-24 |
 | **FR-48** | Mọi truy vấn dữ liệu **tự động** lọc theo tenant, không phụ thuộc lập trình viên | 🔴 | BR-28 | — |
 | **FR-49** | Người dùng chỉ thao tác được trên dữ liệu trong phạm vi được cấp; vi phạm trả **403** | 🔴 | BR-29, BR-30 | — |
-| **FR-50** | Staff/Manager đánh dấu / gỡ `IsTrusted` cho khách | 🔴 | BR-12 | UC-19 |
+| **FR-50** | Staff/Manager đặt / gỡ hai cờ `CanPayAtCounter` và `CanCancelLate` cho khách, độc lập với nhau | 🔴 | BR-12, BR-35 | UC-19 |
 | **FR-51** | Mọi hành động nhạy cảm được ghi **audit log** kèm giá trị trước/sau | 🔴 | BR-32 | — |
 
 ## FR-J — Báo cáo

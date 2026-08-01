@@ -15,7 +15,7 @@
 
 > **BR-06 — Một sân + một khung giờ ⇒ tối đa MỘT booking đang hiệu lực.**
 
-Vi phạm rule này gây hậu quả trực tiếp ngoài đời thật: hai nhóm khách cùng đến sân, cãi nhau tại quầy, mất uy tín, phải hoàn tiền và đền bù. Đây chính là **vấn đề số một** khiến anh Dũng bỏ tiền làm hệ thống — sổ tay giấy không có cơ chế nào chặn hai nhân viên ghi trùng một ô.
+Vi phạm rule này gây hậu quả trực tiếp ngoài đời thật: hai nhóm khách cùng đến sân, cãi nhau tại quầy, mất uy tín, phải hoàn tiền và đền bù. Đây chính là **vấn đề số một** khiến Chủ sân bỏ tiền làm hệ thống — sổ tay giấy không có cơ chế nào chặn hai nhân viên ghi trùng một ô.
 
 ### Đặc điểm tải (từ NFR)
 

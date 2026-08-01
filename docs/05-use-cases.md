@@ -118,6 +118,8 @@ flowchart LR
 | **UC-23** | Đóng sân tạm & xử lý đơn ảnh hưởng | Manager | 🟡 | FR-10, FR-11, FR-35 | Cao |
 | **UC-24** | Phân quyền & phạm vi chi nhánh | Owner | 🔴 | FR-46, FR-47 | Trung bình |
 | **UC-25** | Xem báo cáo | Owner, Manager, Partner | 🔴 | FR-52→56 | Trung bình |
+| **UC-26** | ⭐ **Dời lịch (nguyên tử)** | Customer | 🔴 | FR-65, FR-66 | **Cao** |
+| **UC-27** | Quản lý ghi đè mức hoàn tiền | BranchManager | 🔴 | FR-67 | Thấp |
 
 ---
 
@@ -163,7 +165,7 @@ flowchart LR
 
 | Mã | Điều kiện | Xử lý |
 |---|---|---|
-| **A1** | Khách có `IsTrusted = true` *(BR-12)* | Bước 8 tạo đơn với `payment_mode = PayAtCounter`, trạng thái **`Confirmed`** ngay, không có hạn giữ chỗ. Bỏ qua bước 10. |
+| **A1** | Khách có `CanPayAtCounter = true` *(BR-12)* | Bước 8 tạo đơn với `payment_mode = PayAtCounter`, trạng thái **`Confirmed`** ngay, không có hạn giữ chỗ. Bỏ qua bước 10. |
 | **A2** | Khách chọn 1 slot duy nhất | Bỏ qua kiểm tra liên tiếp ở bước 2 |
 
 **Luồng ngoại lệ**
@@ -265,8 +267,9 @@ flowchart LR
 | 1 | Customer | Chọn đơn, bấm "Hủy" |
 | 2 | Hệ thống | Kiểm tra quyền sở hữu và trạng thái *(BR-17)* |
 | 3 | Hệ thống | Tính khoảng cách tới giờ chơi → xác định mức hoàn *(BR-16)*: ≥24h → 100% · 4–24h → 50% · <4h → 0% |
+| 3b | Hệ thống | 🔀 **Đưa ra HAI lựa chọn** *(BR-34)*: **hủy** (kèm số tiền hoàn) hoặc **dời lịch** (nếu còn trong cửa sổ `N` giờ — BR-36) |
 | 4 | Hệ thống | 🔴 **Hiển thị rõ số tiền được hoàn và yêu cầu xác nhận lại** *(FR-32)* |
-| 5 | Customer | Xác nhận hủy |
+| 5 | Customer | Chọn **hủy** và xác nhận · *(chọn dời lịch → chuyển sang **UC-26**)* |
 | 6 | Hệ thống | **Trong một transaction:** `Booking.Cancel()` → đặt trạng thái, **giải phóng toàn bộ slot**, tạo `Refund` nếu có tiền, ghi `Outbox` + `audit_log` |
 | 7 | Refund worker | Gọi API hoàn tiền của cổng, cập nhật `Refund.status` |
 | 8 | Hệ thống | Thông báo kết quả cho khách |
@@ -338,6 +341,104 @@ flowchart LR
 
 ---
 
+### ⭐ UC-26 — Dời lịch (nguyên tử)
+
+| | |
+|---|---|
+| **Mã** | UC-26 |
+| **Tác nhân chính** | Customer |
+| **Mô tả** | Khách đổi đơn sang khung giờ / ngày / sân khác trong **một thao tác nguyên tử**. Slot mới bị chiếm thì đơn cũ **không hề bị đụng tới**. |
+| **Tần suất** | ~5 lần/ngày (ước tính) |
+| **Trigger** | Khách chọn "Dời lịch" ở UC-12 bước 3b |
+
+**Tiền điều kiện**
+- Đơn thuộc về khách, trạng thái `Confirmed`
+- Còn cách giờ chơi ≥ `N` giờ *(`tenant.reschedule_window_hours`, mặc định 2 — BR-36)*
+- `reschedule_count` < `tenant.max_reschedule_count` *(mặc định 2 — BR-38)*
+
+**Hậu điều kiện (thành công)**
+- Slot mới bị chiếm, slot cũ được giải phóng — **trong cùng một transaction**
+- `booking.start_utc` / `end_utc` cập nhật, `reschedule_count` tăng 1
+- `no_show_count` **không đổi** *(BR-42)*
+- Sự kiện `BookingRescheduled` nằm trong Outbox
+
+**Luồng chính**
+
+| # | Tác nhân | Hành động |
+|---|---|---|
+| 1 | Customer | Chọn đơn, bấm "Dời lịch" |
+| 2 | Hệ thống | Kiểm tra cửa sổ thời gian *(BR-36)* và số lần đã dời *(BR-38)* |
+| 3 | Hệ thống | Hiển thị lịch trống, cho chọn khung giờ / ngày / sân mới *(BR-39: cùng chi nhánh)* |
+| 4 | Customer | Chọn slot mới |
+| 5 | Hệ thống | Tính giá slot mới. Đắt hơn → hiển thị số tiền phải bù. Rẻ hơn → báo rõ **không hoàn chênh lệch** *(BR-38)* |
+| 6 | Customer | Xác nhận (và thanh toán phần bù nếu có — **xong TRƯỚC khi mở transaction**) |
+| 7 | Hệ thống | 🔒 **Trong MỘT transaction:** `INSERT` slot mới → `UPDATE` slot cũ `is_active = false` → cập nhật `booking` → ghi `Outbox` + `audit_log` |
+| 8 | Hệ thống | Trả về đơn đã cập nhật, giữ nguyên `booking_code` |
+
+**Luồng ngoại lệ**
+
+| Mã | Điều kiện | Xử lý | HTTP |
+|---|---|---|---|
+| **E1** | 🔥 **Slot mới bị người khác chiếm giữa bước 4 và 7** | `uq_slot_no_double_booking` từ chối → **rollback toàn bộ transaction**. Đơn cũ giữ nguyên `Confirmed`, slot cũ vẫn bị giữ. Khách được yêu cầu chọn slot khác. **Khách không mất gì.** *(BR-37)* | **409** |
+| **E2** | Đã dời đủ số lần cho phép | Từ chối, gợi ý hủy theo BR-16 | 422 |
+| **E3** | Ngoài cửa sổ `N` giờ | Từ chối, chỉ còn lựa chọn hủy | 422 |
+| **E4** | Slot mới cách hiện tại < `N` giờ | Từ chối — chặn lách chính sách *(BR-38)* | 422 |
+| **E5** | Slot mới đắt hơn, khách chưa bù tiền | Từ chối, chuyển sang luồng thanh toán bổ sung | 402 |
+| **E6** | Slot mới ở **chi nhánh khác** | Từ chối *(BR-39, v1)* | 422 |
+| **E7** | Slot mới vi phạm thời lượng tối thiểu khung giờ đó | Từ chối *(BR-33)* | 422 |
+| **E8** | Đơn thuộc chuỗi định kỳ | ✅ Cho phép — chỉ dời **buổi này**, chuỗi không đổi *(BR-39, BR-26)* | — |
+
+**Rule liên quan:** BR-33, BR-34, **BR-36, BR-37, BR-38, BR-39, BR-42**
+
+> 🔬 **Điểm mấu chốt — vì sao KHÔNG dùng "hủy rồi đặt lại":**
+> Nếu tách làm hai lời gọi API, giữa lúc hủy và lúc đặt lại, **cả hai slot đều có thể mất** — slot cũ bị người khác lấy, slot mới cũng bị người khác lấy. Khách trắng tay đúng vào giờ cao điểm.
+> Làm trong một transaction thì `UniqueViolation` gây rollback, đơn cũ nguyên vẹn. **Cùng một partial unique index của [ADR-0001](16-decision-records/0001-booking-concurrency-strategy.md) làm luôn việc này — không cần thêm cơ chế nào.** Xem [ADR-0003](16-decision-records/0003-atomic-reschedule.md).
+>
+> ⚠️ **Bước 6 phải hoàn tất TRƯỚC bước 7.** Tuyệt đối không gọi cổng thanh toán bên trong transaction — giữ khoá CSDL trong khi chờ mạng bên thứ ba là công thức gây timeout và deadlock.
+
+---
+
+### UC-27 — Quản lý ghi đè mức hoàn tiền
+
+| | |
+|---|---|
+| **Mã** | UC-27 |
+| **Tác nhân chính** | BranchManager |
+| **Mô tả** | Can thiệp vào mức hoàn tiền tự động cho một đơn đã hủy — hoàn nhiều hơn, ít hơn, hoặc từ chối hoàn. |
+| **Tần suất** | ~2 lần/tuần — **ngoại lệ, không phải quy trình** *(BR-41)* |
+
+**Tiền điều kiện**
+- Đơn ở trạng thái `Cancelled`, thuộc **chi nhánh trong phạm vi** của người thao tác *(BR-29)*
+- Yêu cầu hoàn tiền chưa ở trạng thái `Succeeded`
+
+**Luồng chính**
+
+| # | Tác nhân | Hành động |
+|---|---|---|
+| 1 | BranchManager | Mở đơn đã hủy, xem mức hoàn tự động theo BR-16 |
+| 2 | BranchManager | Nhập mức hoàn mới ∈ `[0, số tiền đã trả]` + **lý do bắt buộc** |
+| 3 | Hệ thống | Kiểm tra quyền **và phạm vi chi nhánh** *(BR-29, BR-40)* |
+| 4 | Hệ thống | Ghi `refund_override_amount`, `refund_override_by`, `refund_override_reason` + **`audit_log`** *(BR-32)* |
+| 5 | Hệ thống | Cập nhật `Refund.amount`, tiếp tục quy trình hoàn bất đồng bộ |
+
+**Luồng ngoại lệ**
+
+| Mã | Điều kiện | Xử lý | HTTP |
+|---|---|---|---|
+| **E1** | Staff (không phải Manager) thao tác | Từ chối | 403 |
+| **E2** | Manager thao tác trên chi nhánh **ngoài phạm vi** | Từ chối *(chống IDOR)* | 403 / 404 |
+| **E3** | Không nhập lý do | Từ chối *(BR-40)* | 400 |
+| **E4** | Mức hoàn > số tiền đã trả | Từ chối | 422 |
+| **E5** | Hoàn tiền đã `Succeeded` | Từ chối — không thể ghi đè việc đã xong | 409 |
+
+**Rule liên quan:** BR-29, BR-30, BR-32, **BR-40, BR-41**
+
+> 🔬 **Vì sao thiết kế theo kiểu "ghi đè" chứ không phải "duyệt từng đơn":**
+> Nếu bắt quản lý duyệt **mọi** yêu cầu hoàn tiền, hệ thống mất tính tự phục vụ — mục tiêu **G3** *(≥60% đơn tự động)* bị phá, khách phải chờ hàng giờ, và nhân viên gánh thêm ~8 ca mỗi ngày.
+> Mẫu đúng là **chính sách chạy tự động + con người xử lý ngoại lệ**. Quản lý vẫn có toàn quyền quyết định, chỉ là không phải bấm nút cho từng đơn bình thường.
+
+---
+
 ## 5. Ma trận Use Case × Tác nhân
 
 | UC | Guest | Customer | Staff | Manager | Partner | Owner | Scheduler | Gateway |
@@ -359,6 +460,8 @@ flowchart LR
 | UC-20, 22, 24 | | | | | | ✅ | | |
 | UC-21, 23 | | | | 🔶 | | ✅ | | |
 | UC-25 | | | | 🔶 | 🔶 | ✅ | | |
+| **UC-26** | | ✅ | 🔶 | 🔶 | | ✅ | | |
+| **UC-27** | | | | 🔶 | | ✅ | | |
 
 **Chú thích:** ✅ toàn tenant · 🔶 giới hạn trong phạm vi chi nhánh được cấp
 
@@ -373,3 +476,6 @@ flowchart LR
 | **UC-12 / E3** | Cổng hoàn tiền lỗi mà đơn vẫn hủy được |
 | **UC-17 / E1, E4** | Buổi trùng bị bỏ qua nhưng chuỗi vẫn chạy; job chạy 2 lần không sinh trùng |
 | **UC-25** | Partner **không** thấy được dữ liệu chi nhánh ngoài phạm vi *(chống rò rỉ)* |
+| **UC-26 / E1** | ⭐ Dời lịch mà slot mới bị chiếm → 409, **đơn cũ vẫn `Confirmed` và slot cũ vẫn bị giữ** *(BR-37)* |
+| **UC-26 / E2** | Dời lần thứ 3 → bị từ chối *(BR-38)* |
+| **UC-27 / E2** | Manager ghi đè hoàn tiền ở chi nhánh ngoài phạm vi → 403 *(chống IDOR)* |

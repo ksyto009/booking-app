@@ -36,17 +36,24 @@ erDiagram
 ### 2.1 Định danh & đa chủ sở hữu
 
 ```sql
--- Một chủ sở hữu kinh doanh. Anh Dũng = tenant 1. Ông bạn Bình Dương = tenant 2.
+-- Một chủ sở hữu kinh doanh. Chủ sân hiện tại = tenant 1. Chủ sân khác = tenant 2.
 CREATE TABLE tenant (
     id           uuid PRIMARY KEY,
     name         varchar(200) NOT NULL,
     slug         varchar(60)  NOT NULL UNIQUE,   -- dùng cho subdomain sau này
     status       varchar(20)  NOT NULL,          -- Active | Suspended
-    created_at   timestamptz  NOT NULL DEFAULT now()
+    created_at   timestamptz  NOT NULL DEFAULT now(),
+
+    -- ⚙️ Tham số chính sách — cấu hình theo tenant, KHÔNG hardcode (CR-07, CR-08)
+    half_hour_price_ratio    numeric(4,3) NOT NULL DEFAULT 0.500,  -- BR-14b
+    reschedule_window_hours  smallint     NOT NULL DEFAULT 2,      -- BR-36
+    max_reschedule_count     smallint     NOT NULL DEFAULT 2,      -- BR-38
+    hold_minutes             smallint     NOT NULL DEFAULT 10,     -- BR-11
+    CONSTRAINT ck_tenant_ratio CHECK (half_hour_price_ratio > 0 AND half_hour_price_ratio <= 1)
 );
 
 -- Tài khoản đăng nhập. KHÔNG gắn tenant — một người có thể vừa là khách
--- của cụm A, vừa là nhân viên của tenant khác.
+-- của Cụm 1, vừa là nhân viên của tenant khác.
 CREATE TABLE app_user (
     id              uuid PRIMARY KEY,
     phone_number    varchar(20)  NOT NULL UNIQUE,   -- 🔑 định danh chính
@@ -151,7 +158,10 @@ CREATE TABLE price_rule (
     day_of_week_mask smallint NOT NULL,  -- bitmask: CN=1, T2=2, T3=4 ... T7=64
     start_hour     smallint NOT NULL CHECK (start_hour BETWEEN 0 AND 23),
     end_hour       smallint NOT NULL CHECK (end_hour BETWEEN 1 AND 24),
-    price          numeric(14,2) NOT NULL CHECK (price >= 0),
+    price          numeric(14,2) NOT NULL CHECK (price >= 0),  -- giá MỘT GIỜ
+    -- BR-33: chặn phân mảnh lịch ở khung cao điểm
+    min_duration_minutes smallint NOT NULL DEFAULT 60 CHECK (min_duration_minutes % 30 = 0),
+    max_duration_minutes smallint NOT NULL DEFAULT 240 CHECK (max_duration_minutes % 30 = 0),
     priority       int NOT NULL DEFAULT 0,
     effective_from date NOT NULL,
     effective_to   date NULL,
@@ -173,7 +183,9 @@ CREATE TABLE customer_profile (
     id             uuid PRIMARY KEY,
     tenant_id      uuid NOT NULL REFERENCES tenant(id),
     user_id        uuid NOT NULL REFERENCES app_user(id),
-    is_trusted     boolean NOT NULL DEFAULT false,   -- BR-12: được nợ tiền
+    -- ⚠️ HAI đặc quyền ĐỘC LẬP, hai lý do thu hồi độc lập (CR-08a)
+    can_pay_at_counter boolean NOT NULL DEFAULT false, -- BR-12, thu hồi bởi BR-22
+    can_cancel_late    boolean NOT NULL DEFAULT false, -- BR-35, ngưỡng thu hồi riêng
     no_show_count  int     NOT NULL DEFAULT 0,
     last_no_show_at timestamptz NULL,
     total_bookings int     NOT NULL DEFAULT 0,
@@ -238,6 +250,15 @@ CREATE TABLE booking (
     cancelled_by      uuid NULL,
     cancellation_reason varchar(300) NULL,
 
+    -- 🔄 Dời lịch (CR-08b)
+    reschedule_count  smallint NOT NULL DEFAULT 0,   -- BR-38, trần ở tenant.max_reschedule_count
+    last_rescheduled_at timestamptz NULL,
+
+    -- 🔑 Ghi đè hoàn tiền bởi BranchManager (BR-40)
+    refund_override_amount numeric(14,2) NULL,       -- NULL = dùng mức tự động theo BR-16
+    refund_override_by     uuid NULL,
+    refund_override_reason varchar(300) NULL,        -- BẮT BUỘC khi có override
+
     row_version       integer NOT NULL DEFAULT 0,  -- optimistic concurrency
 
     created_at        timestamptz NOT NULL DEFAULT now(),
@@ -250,7 +271,8 @@ CREATE TABLE booking (
     CONSTRAINT uq_booking_code    UNIQUE (tenant_id, booking_code)
 );
 
--- Mỗi GIỜ của booking là một dòng. Booking 2 tiếng ⇒ 2 dòng.
+-- Mỗi SLOT 30 PHÚT của booking là một dòng (BR-01). Booking 90 phút ⇒ 3 dòng.
+-- Grain đổi từ 60′ xuống 30′ theo CR-07 — xem ADR-0002.
 CREATE TABLE booking_slot (
     id             uuid PRIMARY KEY,
     booking_id     uuid NOT NULL REFERENCES booking(id) ON DELETE CASCADE,
@@ -274,6 +296,10 @@ CREATE UNIQUE INDEX uq_slot_no_double_booking
     ON booking_slot (court_id, slot_start_utc)
     WHERE is_active;
 ```
+
+> ✅ **Ràng buộc này sống sót qua CR-07 nguyên vẹn.** Đổi grain từ 60′ xuống 30′ chỉ đổi *ý nghĩa* của `slot_start_utc`, không đổi cấu trúc index. Đây là lợi ích của việc chọn kịch bản "căn mốc cố định" thay vì "giờ bắt đầu tự do" — xem [ADR-0002](16-decision-records/0002-slot-grain-30-minutes.md).
+
+> 🔄 **Và chính index này làm luôn việc dời lịch nguyên tử (BR-37):** trong một transaction, `INSERT` slot mới rồi `UPDATE` slot cũ `is_active = false`. Nếu slot mới đã bị chiếm, `UniqueViolation` khiến **toàn bộ transaction rollback** — đơn cũ không hề bị đụng tới. Không cần thêm bất kỳ cơ chế nào. Xem [ADR-0003](16-decision-records/0003-atomic-reschedule.md).
 
 `is_active` được đồng bộ với `booking.status`:
 
@@ -421,7 +447,9 @@ stateDiagram-v2
 
 | Không làm | Vì sao |
 |---|---|
-| Bảng `court_availability` sinh sẵn mọi slot | 15 sân × 18 giờ × 365 ngày ≈ 98k dòng/năm chỉ để lưu "trống". Không cần — suy ra từ `booking_slot` là đủ và luôn đúng. |
+| Bảng `court_availability` sinh sẵn mọi slot | 15 sân × 36 slot × 365 ngày ≈ 197k dòng/năm chỉ để lưu "trống". Không cần — suy ra từ `booking_slot` là đủ và luôn đúng. |
+| Bảng `tenant_setting` dạng key-value tổng quát | Mới có 4 tham số chính sách. Cột có kiểu rõ ràng, có `CHECK`, validate được. Chuyển sang bảng động khi vượt ~15 tham số. |
+| Cột `deposit_amount` riêng cho tiền cọc | "Trừ cọc" **chính là** bậc hoàn tiền BR-16 — không phải khái niệm thứ hai. Thêm cột riêng là tạo hai nguồn sự thật về cùng một số tiền. |
 | Partition bảng `booking` theo tháng | ~40k dòng/năm. Postgres cười vào mặt con số này. Làm khi > 10 triệu dòng. |
 | Bảng riêng cho `role` / `permission` | 4 vai trò cố định, dùng enum trong code. Bảng động chỉ cần khi khách tự tạo vai trò. |
 | Event sourcing cho Booking | Quá sức cho v1. `audit_log` đã đủ để truy vết. |

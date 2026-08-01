@@ -180,11 +180,11 @@ public void Cancel(string reason, DateTimeOffset now, Guid actorId)
 - **Data-scoped** trả lời: *"trên **những bản ghi nào**?"*
 
 ### Vì sao dự án này bắt buộc phải có cả hai
-Nhớ lại lời anh Dũng:
+Nhớ lại lời Chủ sân:
 
-> *"Cụm C anh hợp tác với thằng bạn, nó góp vốn 50%. **Nó chỉ được coi doanh thu cụm C thôi, đừng cho nó thấy cụm A với B.**"*
+> *"Cụm 3 tôi hợp tác với một đối tác, người ta góp vốn 50%. **Người ta chỉ được coi doanh thu Cụm 3 thôi, đừng cho thấy Cụm 1 với Cụm 2.**"*
 
-`[Authorize(Roles = "Partner")]` cho phép ông ấy gọi API báo cáo — nhưng **không ngăn** ông ấy đổi `branchId` trên URL để xem cụm A. Đây là lỗ hổng **IDOR** (Insecure Direct Object Reference), nằm trong OWASP Top 10 (Broken Access Control — hạng **#1**).
+`[Authorize(Roles = "Partner")]` cho phép Đối tác góp vốn gọi API báo cáo — nhưng **không ngăn** họ đổi `branchId` trên URL để xem Cụm 1. Đây là lỗ hổng **IDOR** (Insecure Direct Object Reference), nằm trong OWASP Top 10 (Broken Access Control — hạng **#1**).
 
 ### Cách triển khai
 
@@ -229,7 +229,7 @@ if (_currentUser.BranchScope.Count > 0)                       // BR-29
 | **Chung bảng, cột `tenant_id`** ✅ | Thấp nhất | Rẻ nhất, 1 migration | Hàng nghìn tenant nhỏ |
 
 ### Quyết định: chung bảng + `tenant_id`
-Vì tenant ở đây là **chủ sân nhỏ** (anh Dũng, ông bạn Bình Dương), dữ liệu ít, không có yêu cầu pháp lý về cách ly.
+Vì tenant ở đây là **các chủ sân nhỏ** độc lập với nhau, dữ liệu ít, không có yêu cầu pháp lý về cách ly.
 
 ### Rủi ro lớn nhất và cách chặn
 Rủi ro: **quên `WHERE tenant_id = ...` một lần duy nhất** → rò rỉ dữ liệu giữa các khách hàng. Đây là sự cố có thể giết một công ty SaaS.
@@ -266,7 +266,7 @@ protected override void OnModelCreating(ModelBuilder b)
 `booking_slot.unit_price` lưu **giá tại thời điểm đặt**, không join sang `price_rule` khi hiển thị.
 
 ### Vì sao
-Khách đặt sân tháng 8 với giá 120k. Tháng 9 anh Dũng tăng giá lên 150k. Nếu báo cáo join sang bảng giá hiện tại → **doanh thu quá khứ tự động thay đổi**. Sổ sách sai, đối soát sai, khách khiếu nại đúng.
+Khách đặt sân tháng 8 với giá 120k. Tháng 9 Chủ sân tăng giá lên 150k. Nếu báo cáo join sang bảng giá hiện tại → **doanh thu quá khứ tự động thay đổi**. Sổ sách sai, đối soát sai, khách khiếu nại đúng.
 
 ### 📖 Nguyên tắc tổng quát
 > **Dữ liệu giao dịch phải bất biến. Chỉ dữ liệu danh mục mới được thay đổi.**
@@ -500,7 +500,7 @@ if (booking.StartUtc < _timeProvider.GetUtcNow()) ...
 ## 13. Recurring booking bằng **rolling window**
 
 ### Vấn đề
-Anh Dũng có nhóm thuê "tối thứ 3 hàng tuần, vô thời hạn". Sinh bao nhiêu booking?
+Chủ sân có nhóm khách thuê "tối thứ 3 hàng tuần, vô thời hạn". Sinh bao nhiêu booking?
 
 | Phương án | Vấn đề |
 |---|---|

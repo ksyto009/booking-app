@@ -12,7 +12,7 @@
 
 ## 1. Vấn đề cần giải quyết
 
-Anh Dũng sở hữu **3 cụm sân cầu lông, tổng 15 sân** tại Thủ Đức. Hệ thống vận hành hiện tại: **sổ tay giấy + Zalo + điện thoại**.
+Chủ sân sở hữu **3 cụm sân cầu lông, tổng 15 sân** trong cùng một khu vực. Hệ thống vận hành hiện tại: **sổ tay giấy + Zalo + điện thoại**.
 
 | Vấn đề | Nguyên nhân gốc | Thiệt hại |
 |---|---|---|
@@ -56,8 +56,8 @@ Bán nước / thuê vợt / quản lý kho *(khách hàng tự loại — thu t
 
 | Bên liên quan | Vai trò | Quan tâm chính | Ảnh hưởng |
 |---|---|---|---|
-| **Anh Dũng** — chủ sân | Người bỏ tiền, quyết định cuối | Hết trùng lịch, hết no-show, xem được doanh thu | 🔴 Cao |
-| **Bạn góp vốn cụm C** | Đồng sở hữu một phần | Chỉ xem doanh thu cụm C, **không được thấy cụm A/B** | 🟡 Trung bình — nhưng tạo ràng buộc kiến trúc lớn |
+| **Chủ sân** | Người bỏ tiền, quyết định cuối | Hết trùng lịch, hết no-show, xem được doanh thu | 🔴 Cao |
+| **Đối tác góp vốn** | Đồng sở hữu một phần Cụm 3 | Chỉ xem doanh thu Cụm 3, **không được thấy Cụm 1 và 2** | 🟡 Trung bình — nhưng tạo ràng buộc kiến trúc lớn |
 | **Nhân viên quầy** | Người dùng hằng ngày | Thao tác nhanh, đặt hộ khách được, không phải ghi sổ | 🔴 Cao — họ dùng nhiều nhất |
 | **Quản lý cụm** | Vận hành một chi nhánh | Xem lịch, đóng sân bảo trì, xem báo cáo cụm mình | 🟡 Trung bình |
 | **Khách chơi** | Người dùng cuối | Đặt nhanh trên điện thoại, thấy sân trống, không mất tiền oan | 🔴 Cao |
@@ -72,7 +72,7 @@ Bán nước / thuê vợt / quản lý kho *(khách hàng tự loại — thu t
 | **Thời gian** | Khách kỳ vọng ~2–3 tháng cho bản dùng được |
 | **Nguồn lực** | 1 lập trình viên, ~10–15h/tuần → Sprint 1 tuần, 3–5 story nhỏ |
 | **Kỹ thuật** | .NET 9, PostgreSQL, Redis, RabbitMQ, Hangfire, Docker, Next.js *(đã chốt từ đầu)* |
-| **Nghiệp vụ** | Khách ruột **không** bị ép chuyển khoản trước → sinh ra cơ chế `IsTrusted` (BR-12) |
+| **Nghiệp vụ** | Khách ruột **không** bị ép chuyển khoản trước → sinh ra cờ `CanPayAtCounter` (BR-12) |
 | **Ngân sách** | Không có chi phí hạ tầng → dùng VNPay **sandbox**, self-host bằng Docker |
 
 ---

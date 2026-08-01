@@ -84,7 +84,7 @@ Mỗi yêu cầu có mã `BRQ-xx`, gắn với mục tiêu `G1..G5` ở [01-proj
 | **Khách chọn sân** | Khách quen đòi sân cụ thể ("sân 3 đèn sáng"), khách mới thì sân nào cũng được | BR-09 |
 | **Giảm giá định kỳ** | Thuê cố định theo tuần, nguyên tháng → giảm **15%** | BR-23 |
 | **Dịch vụ kèm** | Nước, vợt, cầu, gửi xe → **thu tiền mặt tại quầy, không đưa vào hệ thống** | Won't have |
-| **Phân chia lợi nhuận cụm C** | Đồng sở hữu 50%, chỉ được xem doanh thu cụm C | BR-29, BR-30 |
+| **Phân chia lợi nhuận Cụm 3** | Đối tác góp vốn 50%, chỉ được xem doanh thu Cụm 3 | BR-29, BR-30 |
 
 ---
 

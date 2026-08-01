@@ -498,6 +498,7 @@ appsettings.*.Local.json
 *.key
 # ---- Claude Code (cấu hình cục bộ) ----
 .claude/settings.local.json
+CLAUDE.local.md
 # ---- Khác ----
 .DS_Store
 Thumbs.db
