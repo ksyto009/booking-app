@@ -101,7 +101,7 @@ Toàn bộ nằm trong `docs/`, đánh số phẳng 00→21. Xem [docs/README.md
 
 | Việc | Vì sao chặn |
 |---|---|
-| 🔴 **[07-domain-model.md](docs/07-domain-model.md) chưa viết** | Chặn task S0-03 (migration đầu tiên). Bỏ qua sẽ dẫn tới **Anemic Domain Model** — nợ **TD-01**, rủi ro **R-11** |
+| ✅ ~~07-domain-model.md~~ | **Đã viết (2026-07-31).** Nợ TD-01 đã trả. Sprint 0 không còn bị chặn. Điểm cốt lõi: **BR-06 và BR-37 là bất biến xuyên aggregate — không aggregate nào bảo vệ được, phải do CSDL gánh** |
 | ✅ ~~CR-07 / CR-08a / CR-08b~~ | **Đã quyết định và triển khai vào tài liệu (2026-07-31).** Sinh ra ADR-0002, ADR-0003, BR-33, BR-34…BR-42, R-25…R-27. CR-01…06 đang hoãn — xem [21-change-requests.md](docs/21-change-requests.md) |
 | 🟡 **`README.md` ở thư mục gốc chưa có** | GitHub đang hiển thị repo không có mô tả |
 

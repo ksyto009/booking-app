@@ -15,7 +15,7 @@ Hệ thống đặt sân thể thao theo khung giờ (cầu lông / pickleball),
 | 04 | [Non-Functional Requirements](04-non-functional-requirements.md) | `NFR-01…43` **có số** + ánh xạ sang quyết định kiến trúc | ✅ |
 | 05 | [Use Cases](05-use-cases.md) | `UC-01…25`, đặc tả chi tiết 4 luồng khó nhất | ✅ |
 | 06 | [Business Rules](06-business-rules.md) | `BR-01…32` + ma trận phân quyền | ✅ |
-| 07 | [Domain Model](07-domain-model.md) | Aggregate, Value Object, Domain Event | 🚧 **Ưu tiên 1** |
+| 07 | [Domain Model](07-domain-model.md) | Aggregate, Value Object, Domain Event, bất biến xuyên aggregate | ✅ |
 | 08 | [System Context](08-system-context.md) | C4 Level 1 | 🚧 |
 | 09 | [Architecture](09-architecture.md) | C4 Level 2–3, Clean Architecture, chia module | 🚧 |
 | 10 | [Database Design](10-database-design.md) | Schema, DDL, index, state machine | ✅ |

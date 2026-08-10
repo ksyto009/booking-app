@@ -23,7 +23,6 @@
 
 | Mã | Nợ gì | Vì sao vay | Lãi suất | Điều kiện trả | Ước lượng | Trạng thái |
 |---|---|---|---|---|---|:--:|
-| **TD-01** | [07-domain-model.md](07-domain-model.md) chưa viết; schema được thiết kế theo tư duy **data-first** | Người dùng chọn bỏ qua giai đoạn phân tích để vào code sớm | 🔴 **Cao** — nguy cơ Anemic Domain Model (R-11), logic tràn vào Handler, Clean Architecture mất ý nghĩa | **Trước Sprint 0 task S0-03** (migration đầu tiên) | 3–4h | 🔴 Mở |
 | **TD-02** | Chưa có [11-api-specification.md](11-api-specification.md) — API sẽ được thiết kế lúc code | Ưu tiên hoàn thiện tài liệu phân tích trước | 🟡 TB — dễ ra API không nhất quán giữa các module | Trước Sprint 1 | 3h | 🟡 Mở |
 | **TD-03** | Chưa có [12-sequence-diagrams.md](12-sequence-diagrams.md) | Chưa tới giai đoạn | 🟡 TB — luồng thanh toán và Outbox khó truyền đạt bằng chữ | Trước Sprint 4 | 2h | 🟡 Mở |
 
@@ -33,7 +32,7 @@
 
 | Mã | Nợ gì | Trả ngày | Ghi chú |
 |---|---|---|---|
-| — | *(chưa có)* | | |
+| **TD-01** | [07-domain-model.md](07-domain-model.md) chưa viết; schema thiết kế theo tư duy data-first | **2026-07-31** | Trả bằng một buổi phân tích ranh giới aggregate. Kết quả ngoài mong đợi: quá trình này **phát hiện lại** rằng BR-06 là bất biến xuyên aggregate — chứng minh độc lập cho [ADR-0001](16-decision-records/0001-booking-concurrency-strategy.md) từ hướng domain, và lộ ra một **ngoại lệ có chủ đích** (Payment + Booking cùng transaction) trước đó chưa ai ghi lại. Rủi ro **R-11** (Anemic Domain Model) hạ từ 6 xuống 2. |
 
 ---
 
