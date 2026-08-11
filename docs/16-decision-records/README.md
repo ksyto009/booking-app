@@ -12,6 +12,7 @@
 | [0001](0001-booking-concurrency-strategy.md) | Chiến lược chống đặt trùng sân | ✅ Accepted | 2026-07-30 |
 | [0002](0002-slot-grain-30-minutes.md) | Đổi grain slot từ 60′ xuống 30′ *(CR-07)* | ✅ Accepted | 2026-07-31 |
 | [0003](0003-atomic-reschedule.md) | Dời lịch nguyên tử, không dùng "hủy rồi đặt lại" *(CR-08b)* | ✅ Accepted | 2026-07-31 |
+| [0004](0004-solution-structure-layers-outside.md) | Cấu trúc solution: tầng ở ngoài, module ở trong *(S0-01)* | ✅ Accepted | 2026-07-31 |
 
 > 📌 **ADR-0001 KHÔNG bị lật bởi ADR-0002.** Điểm gãy được ghi trước trong ADR-0001 §6 đã xảy ra, nhưng phương án chọn *(căn mốc `:00`/`:30`)* giữ nguyên hiệu lực của partial unique index. Đây là ví dụ điển hình vì sao mục **"điểm gãy đã biết"** trong ADR là bắt buộc.
 
@@ -19,12 +20,12 @@
 
 | Mã | Chủ đề | Khi nào viết |
 |---|---|---|
-| 0004 | Chiến lược đa chủ sở hữu (row-level vs schema vs database) | Trước Sprint 2 |
-| 0005 | Vai trò của Redis — dùng ở đâu và **không** dùng ở đâu | Sprint 3 |
-| 0006 | Outbox pattern cho tính nhất quán ghi-và-gửi | Sprint 4 |
-| 0007 | Chiến lược idempotency cho thanh toán | Sprint 4 |
-| 0008 | Cửa sổ trượt cho đặt định kỳ | Sprint 5 |
-| 0009 | Ranh giới module & đường cắt sang microservices | Sprint 6 |
+| 0005 | Chiến lược đa chủ sở hữu (row-level vs schema vs database) | Trước Sprint 2 |
+| 0006 | Vai trò của Redis — dùng ở đâu và **không** dùng ở đâu | Sprint 3 |
+| 0007 | Outbox pattern cho tính nhất quán ghi-và-gửi | Sprint 4 |
+| 0008 | Chiến lược idempotency cho thanh toán | Sprint 4 |
+| 0009 | Cửa sổ trượt cho đặt định kỳ | Sprint 5 |
+| 0010 | Đường cắt sang microservices *(kế thừa ADR-0004)* | Sprint 6 |
 
 ---
 

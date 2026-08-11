@@ -24,7 +24,7 @@ Hệ thống đặt sân thể thao theo khung giờ (cầu lông / pickleball),
 | 13 | [Deployment](13-deployment.md) | Docker, CI/CD, migration, backup | 🚧 |
 | 14 | [Security](14-security.md) | STRIDE, auth, cách ly tenant | 🚧 |
 | 15 | [Testing Strategy](15-testing-strategy.md) | Kim tự tháp test, Testcontainers | 🚧 |
-| 16 | [Decision Records](16-decision-records/) | ADR — **lý do** của mọi quyết định lớn | ✅ 3/9 |
+| 16 | [Decision Records](16-decision-records/) | ADR — **lý do** của mọi quyết định lớn | ✅ 4/10 |
 | 17 | [Risk Analysis](17-risk-analysis.md) | `R-01…24` + assumptions | ✅ |
 | 18 | [Roadmap](18-roadmap.md) | MoSCoW + lộ trình Sprint 0–7 | ✅ |
 | 19 | [Runbook](19-runbook.md) | Xử lý sự cố | 🚧 |
