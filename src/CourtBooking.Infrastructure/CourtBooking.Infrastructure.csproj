@@ -4,5 +4,10 @@
     <ProjectReference Include="..\CourtBooking.Application\CourtBooking.Application.csproj" />
   </ItemGroup>
 
+  <ItemGroup>
+    <PackageReference Include="EFCore.NamingConventions" />
+    <PackageReference Include="Npgsql.EntityFrameworkCore.PostgreSQL" />
+  </ItemGroup>
+
 
 </Project>

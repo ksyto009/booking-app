@@ -136,6 +136,16 @@ CREATE UNIQUE INDEX uq_slot_no_double_booking
     WHERE is_active;
 ```
 
+mục tiêu không phải là:
+
+Mỗi (court_id, slot_start_utc) chỉ được xuất hiện đúng 1 lần trong toàn bộ bảng. (UNIQUE CONSTRAINT)
+
+Mà là:
+
+Mỗi (court_id, slot_start_utc) chỉ được xuất hiện 1 lần trong các row đang is_active = true. (Partial Unique Index)
+
+Đây chính là lý do dùng Partial Unique Index. Chứ không phải là UNIQUE CONSTRAINT
+
 ---
 
 ## 4. Quyết định (Decision)
